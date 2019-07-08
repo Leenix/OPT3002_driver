@@ -2,26 +2,15 @@
 #include <Wire.h>
 
 const uint8_t OPT3002_DEFAULT_ADDRESS = 0x44;
-const uint8_t OPT3002_MANUFACTURER_ID = 0x5449;
-
-/**
- * Register addresses of the sensor.
- */
-typedef enum OPT3002_REGISTER {
-    ILLU_RESULT = 0x00,
-    ILLU_CONFIG = 0x01,
-    ILLU_LOW_LIMIT = 0x02,
-    ILLU_HIGH_LIMIT = 0x03,
-    ILLU_MANUFACTURER_ID = 0x7E
-} opt3002_reg_t;
+const uint16_t OPT3002_MANUFACTURER_ID = 0x5449;
 
 /**
  * Operation modes of the sensor
  */
 typedef enum OPT3002_MODE {
-    SHUTDOWN = 0b00,     // Default - low power state
-    SINGLE_SHOT = 0b01,  // Shut down after a signle conversion
-    CONTINUOUS = 0b10    // Continuous conversions
+    OPT3002_MODE_SHUTDOWN = 0b00,     // Default - low power state
+    OPT3002_MODE_SINGLE_SHOT = 0b01,  // Shut down after a signle conversion
+    OPT3002_MODE_CONTINUOUS = 0b10    // Continuous conversions
 } opt3002_mode_t;
 
 /**
@@ -31,8 +20,8 @@ typedef enum OPT3002_MODE {
  * the sensor's measurements.
  */
 typedef enum OPT3002_CONVERSION_TIME {
-    ILLU_100MS = 0,  // 100ms conversion time
-    ILLU_800MS = 1,  // 800ms conversion time
+    OPT3002_CONV_TIME_100MS = 0,  // 100ms conversion time
+    OPT3002_CONV_TIME_800MS = 1,  // 800ms conversion time
 } opt3002_conv_time_t;
 
 /**
@@ -174,8 +163,19 @@ class OPT3002 {
     opt3002_result_t get_low_limit();
 
    private:
+    /**
+     * Register addresses of the sensor.
+     */
+    typedef enum OPT3002_REGISTER {
+        RESULT = 0x00,
+        CONFIG = 0x01,
+        LOW_LIMIT = 0x02,
+        HIGH_LIMIT = 0x03,
+        MANUFACTURER_ID = 0x7E
+    } opt3002_reg_t;
+
     // I2C address of the sensor
-    uint8_t device_address;
+    uint8_t _device_address;
 
     // Read from the sensor's registers
     bool read(uint8_t *output, opt3002_reg_t address, uint8_t length = 2);

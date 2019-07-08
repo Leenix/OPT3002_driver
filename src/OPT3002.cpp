@@ -15,7 +15,7 @@ void OPT3002::set_address(uint8_t address) {
     // Restrict the input address to the valid range
     address |= 0b1000100;
     address = address & 0b1000111;
-    device_address = address;
+    _device_address = address;
 }
 
 /**
@@ -27,7 +27,7 @@ void OPT3002::set_address(uint8_t address) {
  */
 bool OPT3002::write(uint8_t *input, opt3002_reg_t address, uint8_t length) {
     bool result = true;
-    Wire.beginTransmission(device_address);
+    Wire.beginTransmission(_device_address);
     Wire.write(address);
     for (size_t i = 0; i < length; i++) {
         Wire.write(input[i]);
@@ -47,14 +47,14 @@ bool OPT3002::write(uint8_t *input, opt3002_reg_t address, uint8_t length) {
  */
 bool OPT3002::read(uint8_t *output, opt3002_reg_t address, uint8_t length) {
     bool result = true;
-    Wire.beginTransmission(address);
+    Wire.beginTransmission(_device_address);
     Wire.write(address);
     if (Wire.endTransmission() != 0)
         result = false;
 
     else  // OK, all worked, keep going
     {
-        Wire.requestFrom(address, length);
+        Wire.requestFrom(_device_address, length);
         for (size_t i = 0; (i < length) and Wire.available(); i++) {
             uint8_t c = Wire.read();
             output[i] = c;
@@ -66,14 +66,14 @@ bool OPT3002::read(uint8_t *output, opt3002_reg_t address, uint8_t length) {
 /**
  *
  */
-void OPT3002::apply_config() { write((uint8_t *)&config, OPT3002_REGISTER::ILLU_CONFIG); }
+void OPT3002::apply_config() { write((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
 
 /**
  *
  */
 opt3002_config_t OPT3002::read_config() {
     opt3002_config_t current_config;
-    read((uint8_t *)&current_config, OPT3002_REGISTER::ILLU_CONFIG);
+    read((uint8_t *)&current_config, OPT3002_REGISTER::CONFIG);
     return current_config;
 }
 
@@ -82,7 +82,7 @@ opt3002_config_t OPT3002::read_config() {
  */
 bool OPT3002::check_comms() {
     uint16_t manufacturer_id;
-    read((uint8_t *)&manufacturer_id, OPT3002_REGISTER::ILLU_MANUFACTURER_ID);
+    read((uint8_t *)&manufacturer_id, OPT3002_REGISTER::MANUFACTURER_ID);
 
     // Make sure the manufacturer's ID matches the expected value ('TI')
     bool success = false;
@@ -97,7 +97,7 @@ bool OPT3002::check_comms() {
  */
 uint32_t OPT3002::get_optical_power() {
     opt3002_result_t result;
-    read((uint8_t *)&result, OPT3002_REGISTER::ILLU_RESULT);
+    read((uint8_t *)&result, OPT3002_REGISTER::RESULT);
 
     // Calculate optical power [ref: Equation 1, OPT3002 Datasheet]
     // Optical_Power = R[11:0] * 2^(E[3:0]) * 1.2 nW/cm^2
@@ -117,18 +117,16 @@ bool OPT3002::begin(uint8_t address) {
 }
 
 void OPT3002::set_high_limit(opt3002_result_t high_limit) {
-    write((uint8_t *)&high_limit, OPT3002_REGISTER::ILLU_HIGH_LIMIT);
+    write((uint8_t *)&high_limit, OPT3002_REGISTER::HIGH_LIMIT);
 }
 
 opt3002_result_t OPT3002::get_high_limit() {
     opt3002_result_t limit;
-    read((uint8_t *)&limit, OPT3002_REGISTER::ILLU_HIGH_LIMIT);
+    read((uint8_t *)&limit, OPT3002_REGISTER::HIGH_LIMIT);
     return limit;
 }
 
-void OPT3002::set_low_limit(opt3002_result_t low_limit) {
-    write((uint8_t *)&low_limit, OPT3002_REGISTER::ILLU_LOW_LIMIT);
-}
+void OPT3002::set_low_limit(opt3002_result_t low_limit) { write((uint8_t *)&low_limit, OPT3002_REGISTER::LOW_LIMIT); }
 
 /**
  * Get the low limit level from the sensor.
@@ -136,6 +134,6 @@ void OPT3002::set_low_limit(opt3002_result_t low_limit) {
  */
 opt3002_result_t OPT3002::get_low_limit() {
     opt3002_result_t limit;
-    read((uint8_t *)&limit, OPT3002_REGISTER::ILLU_LOW_LIMIT);
+    read((uint8_t *)&limit, OPT3002_REGISTER::LOW_LIMIT);
     return limit;
 }

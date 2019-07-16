@@ -25,13 +25,12 @@ void OPT3002::set_address(uint8_t address) {
  * @param address: Address of register to write to.
  * @return: Success/error result of the write.
  */
-bool OPT3002::write(uint8_t *input, opt3002_reg_t address, uint8_t length) {
+bool OPT3002::write(uint8_t *input, opt3002_reg_t address) {
     bool result = true;
     Wire.beginTransmission(_device_address);
     Wire.write(address);
-    for (size_t i = 0; i < length; i++) {
-        Wire.write(input[i]);
-    }
+    Wire.write(input[1]);
+    Wire.write(input[0]);
 
     if (Wire.endTransmission() != 0) {
         result = false;
@@ -45,7 +44,7 @@ bool OPT3002::write(uint8_t *input, opt3002_reg_t address, uint8_t length) {
  * @param address: Register address to read (or starting address in burst reads)
  * @param length: Number of bytes to read.
  */
-bool OPT3002::read(uint8_t *output, opt3002_reg_t address, uint8_t length) {
+bool OPT3002::read(uint8_t *output, opt3002_reg_t address) {
     bool result = true;
     Wire.beginTransmission(_device_address);
     Wire.write(address);
@@ -54,10 +53,10 @@ bool OPT3002::read(uint8_t *output, opt3002_reg_t address, uint8_t length) {
 
     else  // OK, all worked, keep going
     {
-        Wire.requestFrom(_device_address, length);
-        for (size_t i = 0; (i < length) and Wire.available(); i++) {
+        Wire.requestFrom(_device_address, 2);
+        for (size_t i = 0; (i < 2) and Wire.available(); i++) {
             uint8_t c = Wire.read();
-            output[i] = c;
+            output[1 - i] = c;
         }
     }
     return result;
@@ -66,14 +65,15 @@ bool OPT3002::read(uint8_t *output, opt3002_reg_t address, uint8_t length) {
 /**
  *
  */
-void OPT3002::apply_config() { write((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
+void OPT3002::write_config(opt3002_config_t config) { write((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
+void OPT3002::read_config(opt3002_config_t &config) { read((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
 
 /**
  *
  */
-opt3002_config_t OPT3002::read_config() {
+opt3002_config_t OPT3002::get_config() {
     opt3002_config_t current_config;
-    read((uint8_t *)&current_config, OPT3002_REGISTER::CONFIG);
+    read_config(current_config);
     return current_config;
 }
 
@@ -81,8 +81,9 @@ opt3002_config_t OPT3002::read_config() {
  * Check that things work // TODO - documentation
  */
 bool OPT3002::check_comms() {
-    uint16_t manufacturer_id;
-    read((uint8_t *)&manufacturer_id, OPT3002_REGISTER::MANUFACTURER_ID);
+    uint8_t buffer[2];
+    read(buffer, OPT3002_REGISTER::MANUFACTURER_ID);
+    uint16_t manufacturer_id = uint16_t(buffer[1]) << 8 | buffer[0];
 
     // Make sure the manufacturer's ID matches the expected value ('TI')
     bool success = false;
@@ -108,12 +109,7 @@ uint32_t OPT3002::get_optical_power() {
 
 bool OPT3002::begin(uint8_t address) {
     set_address(address);
-    bool working = check_comms();
-    if (working) {
-        apply_config();
-    }
-
-    return working;
+    return check_comms();
 }
 
 void OPT3002::set_high_limit(opt3002_result_t high_limit) {

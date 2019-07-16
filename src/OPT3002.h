@@ -45,8 +45,8 @@ typedef enum OPT3002_INTERRUPT_MODE {
  * Active-low interrupts require a pull-up resistor on the INT pin.
  */
 typedef enum OPT3002_INTERRUPT_POLARITY {
-    ACTIVE_LOW = 0,
-    ACTIVE_HIGH = 1,
+    OPT3002_ACTIVE_LOW = 0,
+    OPT3002_ACTIVE_HIGH = 1,
 } opt3002_interrupt_polarity_t;
 
 /**
@@ -92,17 +92,17 @@ typedef enum OPT3002_FAULT_CONFIG {
  */
 typedef union {
     struct {
-        uint8_t fault_interrupt_count : 2;  // Number of measurements outside set levels required to trigger interrupt
-        uint8_t mask_exponent : 1;          // Not sure...
-        uint8_t interrupt_polarity : 1;     // Polarity of interrupt signal [active high, active low]
-        uint8_t interrupt_mode : 1;         // Interrupt latch mode [transient, latched]
-        uint8_t flag_low : 1;               // Read-only. 1: Conversion lower than user's low limit
-        uint8_t flag_high : 1;              // Read-only. 1: Conversion larger than user's high limit
-        uint8_t conversion_ready : 1;       // Read-only. 1: Conversion complete
-        uint8_t overflow : 1;               // Read-only. 1: ADC overflow
-        uint8_t mode : 2;                   // Conversion mode. [shutdown, single conversion, continuous conversion]
-        uint8_t conversion_time : 2;        //[100, 800] ms conversion time
-        uint8_t range : 4;                  // Full-scale range of measurements
+        uint8_t interrupt_fault_limit : 2;  // Number of measurements outside set levels required to trigger interrupt
+        bool mask_exponent_field_enabled : 1;    // Not sure...
+        bool interrupt_active_high_enabled : 1;  // Polarity of interrupt signal [active high, active low]
+        bool interrupt_latch_enabled : 1;        // Interrupt latch mode [transient, latched]
+        bool high_limit_triggered : 1;           // Read-only. 1: Conversion lower than user's low limit
+        bool low_limit_triggered : 1;            // Read-only. 1: Conversion larger than user's high limit
+        bool conversion_ready_triggered : 1;     // Read-only. 1: Conversion complete
+        bool overflow_triggered : 1;             // Read-only. 1: ADC overflow
+        uint8_t conversion_mode : 2;          // Conversion mode. [shutdown, single conversion, continuous conversion]
+        uint8_t long_conversion_enabled : 1;  //[100, 800] ms conversion time
+        uint8_t range : 4;                    // Full-scale range of measurements
     };
     uint16_t raw;
 } opt3002_config_t;
@@ -129,9 +129,6 @@ typedef union {
  */
 class OPT3002 {
    public:
-    // Soft-managed configuration to be written to the sensor
-    opt3002_config_t config;
-
     // Start the sensor if comms work
     bool begin(uint8_t address = OPT3002_DEFAULT_ADDRESS);
 
@@ -142,10 +139,11 @@ class OPT3002 {
     bool check_comms();
 
     // Apply the soft configuration to the sensor
-    void apply_config();
+    void write_config(opt3002_config_t config);
+    void read_config(opt3002_config_t &config);
 
     // Read the sensor's current configuration
-    opt3002_config_t read_config();
+    opt3002_config_t get_config();
 
     // Get the optical power of the sensor's latest measurement
     uint32_t get_optical_power();
@@ -178,8 +176,8 @@ class OPT3002 {
     uint8_t _device_address;
 
     // Read from the sensor's registers
-    bool read(uint8_t *output, opt3002_reg_t address, uint8_t length = 2);
+    bool read(uint8_t *output, opt3002_reg_t address);
 
     // Write to the sensor's registers
-    bool write(uint8_t *input, opt3002_reg_t address, uint8_t length = 2);
+    bool write(uint8_t *input, opt3002_reg_t address);
 };

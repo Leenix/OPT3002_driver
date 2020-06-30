@@ -75,12 +75,7 @@ typedef enum OPT3002_RANGE {
  * A fault is described as an instance of the measured signal
  * being outside the user-set low or high limits.
  */
-typedef enum OPT3002_FAULT_CONFIG {
-    OPT3002_FAULT_1 = 0,
-    OPT3002_FAULT_2 = 1,
-    OPT3002_FAULT_4 = 2,
-    OPT3002_FAULT_8 = 3
-} opt3002_fault_count_t;
+typedef enum OPT3002_FAULT_CONFIG { OPT3002_FAULT_1 = 0, OPT3002_FAULT_2 = 1, OPT3002_FAULT_4 = 2, OPT3002_FAULT_8 = 3 } opt3002_fault_count_t;
 
 /**
  * Configuration options for the sensor.
@@ -92,17 +87,17 @@ typedef enum OPT3002_FAULT_CONFIG {
  */
 typedef union {
     struct {
-        uint8_t interrupt_fault_limit : 2;  // Number of measurements outside set levels required to trigger interrupt
+        uint8_t interrupt_fault_limit : 2;       // Number of measurements outside set levels required to trigger interrupt
         bool mask_exponent_field_enabled : 1;    // Not sure...
         bool interrupt_active_high_enabled : 1;  // Polarity of interrupt signal [active high, active low]
         bool interrupt_latch_enabled : 1;        // Interrupt latch mode [transient, latched]
-        bool high_limit_triggered : 1;           // Read-only. 1: Conversion lower than user's low limit
-        bool low_limit_triggered : 1;            // Read-only. 1: Conversion larger than user's high limit
+        bool low_limit_triggered : 1;            // Read-only. 1: Conversion lower than user's low limit
+        bool high_limit_triggered : 1;           // Read-only. 1: Conversion larger than user's high limit
         bool conversion_ready_triggered : 1;     // Read-only. 1: Conversion complete
         bool overflow_triggered : 1;             // Read-only. 1: ADC overflow
-        uint8_t conversion_mode : 2;          // Conversion mode. [shutdown, single conversion, continuous conversion]
-        uint8_t long_conversion_enabled : 1;  //[100, 800] ms conversion time
-        uint8_t range : 4;                    // Full-scale range of measurements
+        uint8_t conversion_mode : 2;             // Conversion mode. [shutdown, single conversion, continuous conversion]
+        uint8_t long_conversion_enabled : 1;     //[100, 800] ms conversion time
+        uint8_t range : 4;                       // Full-scale range of measurements
     };
     uint16_t raw;
 } opt3002_config_t;
@@ -150,27 +145,27 @@ class OPT3002 {
 
     // Set the high limit for sensor measurements before faults occur
     void set_high_limit(opt3002_result_t high_limit);
+    void set_high_limit(float high_limit);
 
     // Get the sensor's current high limit level
     opt3002_result_t get_high_limit();
 
     // Set the low limit for sensor measurements before faults occur
     void set_low_limit(opt3002_result_t low_limit);
+    void set_low_limit(float low_limit);
 
     // Get the sensor's current low limit level
     opt3002_result_t get_low_limit();
+
+    // Convert between
+    opt3002_result_t convert_measurement(float input);
+    float convert_measurement(opt3002_result_t input);
 
    private:
     /**
      * Register addresses of the sensor.
      */
-    typedef enum OPT3002_REGISTER {
-        RESULT = 0x00,
-        CONFIG = 0x01,
-        LOW_LIMIT = 0x02,
-        HIGH_LIMIT = 0x03,
-        MANUFACTURER_ID = 0x7E
-    } opt3002_reg_t;
+    typedef enum OPT3002_REGISTER { RESULT = 0x00, CONFIG = 0x01, LOW_LIMIT = 0x02, HIGH_LIMIT = 0x03, MANUFACTURER_ID = 0x7E } opt3002_reg_t;
 
     // I2C address of the sensor
     uint8_t _device_address;

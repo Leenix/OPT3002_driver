@@ -100,11 +100,8 @@ uint32_t OPT3002::get_optical_power() {
     opt3002_result_t result;
     read((uint8_t *)&result, OPT3002_REGISTER::RESULT);
 
-    // Calculate optical power [ref: Equation 1, OPT3002 Datasheet]
-    // Optical_Power = R[11:0] * 2^(E[3:0]) * 1.2 nW/cm^2
-    uint32_t exponent = 1 << result.exponent;
-    uint32_t optical_power = result.reading * exponent * 1.2;
-    return optical_power;
+    float optical_power = convert_measurement(result);
+    return (uint32_t)optical_power;
 }
 
 bool OPT3002::begin(uint8_t address) {
@@ -112,9 +109,8 @@ bool OPT3002::begin(uint8_t address) {
     return check_comms();
 }
 
-void OPT3002::set_high_limit(opt3002_result_t high_limit) {
-    write((uint8_t *)&high_limit, OPT3002_REGISTER::HIGH_LIMIT);
-}
+void OPT3002::set_high_limit(opt3002_result_t high_limit) { write((uint8_t *)&high_limit, OPT3002_REGISTER::HIGH_LIMIT); }
+void OPT3002::set_high_limit(float high_limit) { set_high_limit(convert_measurement(high_limit)); }
 
 opt3002_result_t OPT3002::get_high_limit() {
     opt3002_result_t limit;
@@ -123,6 +119,7 @@ opt3002_result_t OPT3002::get_high_limit() {
 }
 
 void OPT3002::set_low_limit(opt3002_result_t low_limit) { write((uint8_t *)&low_limit, OPT3002_REGISTER::LOW_LIMIT); }
+void OPT3002::set_low_limit(float low_limit) { set_low_limit(convert_measurement(low_limit)); }
 
 /**
  * Get the low limit level from the sensor.
@@ -132,4 +129,26 @@ opt3002_result_t OPT3002::get_low_limit() {
     opt3002_result_t limit;
     read((uint8_t *)&limit, OPT3002_REGISTER::LOW_LIMIT);
     return limit;
+}
+
+float OPT3002::convert_measurement(opt3002_result_t input) {
+    // Calculate optical power [ref: Equation 1, OPT3002 Datasheet]
+    // Optical_Power = R[11:0] * 2^(E[3:0]) * 1.2 nW/cm^2
+    uint32_t exponent = 1 << input.exponent;
+    uint32_t output = input.reading * exponent * 1.2;
+    return output;
+}
+
+opt3002_result_t OPT3002::convert_measurement(float input) {
+    uint8_t exponent = 0;
+    uint16 fractional = input / 1.2;
+    while (fractional >= (1 << 12) and exponent < (1 << 4)) {
+        fractional /= 2;
+        exponent++;
+    }
+    opt3002_result_t output;
+    output.exponent = exponent;
+    output.reading = fractional;
+
+    return output;
 }

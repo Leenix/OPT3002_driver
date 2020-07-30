@@ -9,7 +9,7 @@ const uint16_t OPT3002_MANUFACTURER_ID = 0x5449;
  */
 typedef enum OPT3002_MODE {
     OPT3002_MODE_SHUTDOWN = 0b00,     // Default - low power state
-    OPT3002_MODE_SINGLE_SHOT = 0b01,  // Shut down after a signle conversion
+    OPT3002_MODE_SINGLE_SHOT = 0b01,  // Shut down after a single conversion
     OPT3002_MODE_CONTINUOUS = 0b10    // Continuous conversions
 } opt3002_mode_t;
 
@@ -134,8 +134,8 @@ class OPT3002 {
     bool check_comms();
 
     // Apply the soft configuration to the sensor
-    void write_config(opt3002_config_t config);
-    void read_config(opt3002_config_t &config);
+    void write(opt3002_config_t config);
+    void read(opt3002_config_t &config);
 
     // Read the sensor's current configuration
     opt3002_config_t get_config();

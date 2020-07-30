@@ -65,15 +65,15 @@ bool OPT3002::read(uint8_t *output, opt3002_reg_t address) {
 /**
  *
  */
-void OPT3002::write_config(opt3002_config_t config) { write((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
-void OPT3002::read_config(opt3002_config_t &config) { read((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
+void OPT3002::write(opt3002_config_t config) { write((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
+void OPT3002::read(opt3002_config_t &config) { read((uint8_t *)&config, OPT3002_REGISTER::CONFIG); }
 
 /**
  *
  */
 opt3002_config_t OPT3002::get_config() {
     opt3002_config_t current_config;
-    read_config(current_config);
+    this->read(current_config);
     return current_config;
 }
 
